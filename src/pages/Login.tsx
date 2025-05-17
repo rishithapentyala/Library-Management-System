@@ -1,0 +1,125 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { toast } from 'react-toastify';
+import { Book, Mail, Lock, ArrowRight } from 'lucide-react';
+
+const Login: React.FC = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const { login, isAuthenticated, userRole } = useAuth();
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    // Redirect if already logged in
+    if (isAuthenticated) {
+      navigate(userRole === 'admin' ? '/admin/dashboard' : '/user/dashboard');
+    }
+  }, [isAuthenticated, navigate, userRole]);
+  
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validate email format
+    if (!email.endsWith('@srmap.edu.in')) {
+      toast.error('Email must be a valid university email (@srmap.edu.in)');
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      const success = await login(email, password);
+      
+      if (success) {
+        toast.success('Login successful!');
+        navigate('/user/dashboard');
+      } else {
+        toast.error('Invalid email or password');
+      }
+    } catch (error) {
+      toast.error('An error occurred during login');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  return (
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+      <div className="w-full max-w-md bg-white rounded-lg shadow-md overflow-hidden">
+        <div className="bg-primary-600 py-4 text-center text-white">
+          <div className="flex justify-center mb-2">
+            <Book className="h-8 w-8" />
+          </div>
+          <h1 className="text-2xl font-bold">University Library</h1>
+          <p className="text-primary-200 text-sm">Access your student account</p>
+        </div>
+        
+        <div className="px-6 py-8">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                University Email
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Mail className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  id="email"
+                  type="email"
+                  placeholder="student@srmap.edu.in"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="pl-10 w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  required
+                />
+              </div>
+            </div>
+            
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                Password
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Lock className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pl-10 w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  required
+                />
+              </div>
+            </div>
+            
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full bg-primary-600 text-white py-2 px-4 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors"
+            >
+              {isLoading ? 'Logging in...' : 'Login'}
+            </button>
+          </form>
+          
+          <div className="mt-6 text-center">
+            <Link 
+              to="/admin/login" 
+              className="text-primary-600 hover:text-primary-800 text-sm inline-flex items-center"
+            >
+              Login as Librarian
+              <ArrowRight className="ml-1 h-4 w-4" />
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Login;
